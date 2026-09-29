@@ -1,1 +1,27 @@
-{"name":"Reel Library","short_name":"Reels","start_url":"./index.html","display":"standalone","background_color":"#f3f4f6","theme_color":"#111827","share_target":{"action":"./index.html?share=1","method":"GET","params":{"title":"title","text":"text","url":"url"}},"icons":[]}
+{
+  "name": "Reel Library",
+  "short_name": "Reels",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f3f4f6",
+  "theme_color": "#111827",
+  "description": "A personal library for saving and organizing Facebook Reel links.",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "share_target": {
+    "action": "./index.html?share=1",
+    "method": "GET",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  }
+}
