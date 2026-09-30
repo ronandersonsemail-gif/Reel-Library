@@ -8,7 +8,7 @@ const sharedFound=(allShared.match(/https?:\/\/[^\s"'<>]+/i)||[])[0]||"";
 const sharedReelUrl=sharedFound.replace(/[),.;]+$/,"");
 function esc(s){return String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 function persist(){localStorage.setItem(KEY,JSON.stringify(a));render()}
-function openAdd(id){edit=id||null;let r=a.find(x=>x.id===id);url.value=r?r.url:(!id?sharedUrl:"");title.value=r?r.title:(!id?(sharedTitle||"Facebook Reel"):"");tags.value=r?r.tags.join(", "):"";notes.value=r?r.notes:(!id?sharedText:"");dlg.showModal()}
+function openAdd(id){edit=id||null;let r=a.find(x=>x.id===id);url.value=r?r.url:(!id?sharedReelUrl:"");title.value=r?r.title:(!id?(sharedTitle||"Facebook Reel"):"");tags.value=r?r.tags.join(", "):"";notes.value=r?r.notes:(!id?sharedText:"");dlg.showModal()}
 function save(){if(!/^https?:\/\//i.test(url.value.trim()))return alert("Please enter the full Facebook Reel link.");let old=a.find(x=>x.id===edit),r={id:edit||crypto.randomUUID(),url:url.value.trim(),title:title.value.trim()||"Facebook Reel",tags:tags.value.split(",").map(x=>x.trim()).filter(Boolean),notes:notes.value.trim(),favorite:old?old.favorite:false,date:old?old.date:new Date().toISOString()};if(edit)a=a.map(x=>x.id===edit?r:x);else a.unshift(r);dlg.close();persist()}
 function fav(id){let r=a.find(x=>x.id===id);r.favorite=!r.favorite;persist()}
 function del(id){if(confirm("Delete this Reel?")){a=a.filter(x=>x.id!==id);persist()}}
