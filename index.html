@@ -71,10 +71,11 @@ list.innerHTML=(play?'<div class="card"><div class="row">'+play+'<span class="mu
 function manageFolders(){folderList.innerHTML=folders.map(f=>'<div class="row"><span style="flex:1">📁 '+esc(f)+'</span>'+(f==="Unsorted"?"":'<button class="danger" onclick=\'removeFolder('+JSON.stringify(f)+')\'>Delete</button>')+'</div>').join("");foldersDlg.showModal()}
 function addFolder(){let n=prompt("Name for the new folder:");n=(n||"").trim();if(!n||folders.includes(n))return;if(!folders.includes(n))folders.splice(folders.length-1,0,n);persist();manageFolders()}
 function removeFolder(f){if(!confirm("Delete folder '"+f+"'? Saved videos will move to Unsorted."))return;a.forEach(r=>{if(r.folder===f){r.folder="Unsorted";r.folderLocked=false}});folders=folders.filter(x=>x!==f);persist();manageFolders()}
-function playFolder(){let q=a.filter(r=>r.folder===currentFolder);if(!q.length)return;queue=q;queueIndex=0;showQueue();window.open(q[0].url,"_blank")}
-function showQueue(){queueEl=document.getElementById("queue");if(!queue.length){queueEl.style.display="none";return}queueEl.style.display="block";queueEl.innerHTML='<b>▶️ '+esc(currentFolder)+'</b> · '+(queueIndex+1)+' of '+queue.length+' <button onclick="nextInQueue()">Next ▶️</button><button onclick="stopQueue()">Stop</button>'}
-function nextInQueue(){queueIndex++;if(queueIndex>=queue.length)return stopQueue();showQueue();window.open(queue[queueIndex].url,"_blank")}
-function stopQueue(){queue=[];document.getElementById("queue").style.display="none"}
+function openQueueVideo(i){if(i<0||i>=queue.length)return;queueIndex=i;window.open(queue[i].url,"_blank");showQueue()}
+function playFolder(){let q=a.filter(r=>r.folder===currentFolder);if(!q.length)return;queue=q;queueIndex=0;showQueue();window.open(queue[0].url,"_blank")}
+function showQueue(){let queueEl=document.getElementById("queue");if(!queue.length){queueEl.style.display="none";return}queueEl.style.display="block";let next=queueIndex+1<queue.length?'<button onclick="nextInQueue()">Next ▶️</button>':"";queueEl.innerHTML='<b>▶️ '+esc(currentFolder)+'</b> · Video '+(queueIndex+1)+' of '+queue.length+' '+next+' <button onclick="stopQueue()">Stop</button>'}
+function nextInQueue(){let next=queueIndex+1;if(next>=queue.length)return stopQueue();openQueueVideo(next)}
+function stopQueue(){queue=[];queueIndex=0;document.getElementById("queue").style.display="none"}
 function backup(){let b=new Blob([JSON.stringify({version:2,reels:a,folders},null,2)],{type:"application/json"}),x=document.createElement("a");x.href=URL.createObjectURL(b);x.download="reel-safe-backup.json";x.click()}
 restore.onchange=e=>{let f=e.target.files[0],r=new FileReader();r.onload=()=>{try{let x=JSON.parse(r.result);let reels=Array.isArray(x)?x:x.reels;if(confirm("Replace your library with this backup?")){a=reels||[];folders=Array.isArray(x.folders)?x.folders:folders;migrate();persist()}}catch{alert("Invalid backup.")}};r.readAsText(f)}
 search.oninput=render;migrate();render();if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js?v=5").catch(()=>{});
