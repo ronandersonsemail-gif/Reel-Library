@@ -10,7 +10,7 @@ h1{margin:0 0 10px;font-size:28px}.tagline{font-size:13px;opacity:.75;margin-bot
 input,textarea,select,button{box-sizing:border-box;padding:10px;margin:4px;border-radius:9px;border:1px solid #ccc;font:inherit}
 input,textarea,select{width:100%}button{cursor:pointer;background:white}.primary{background:#2563eb;color:white;border-color:#2563eb}
 .row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}.row>*{flex:0 1 auto}
-.stat{font-size:14px}.muted{color:#64748b;font-size:13px}.folderbar{display:flex;gap:6px;overflow:auto;padding:4px 0 8px}
+.stat{font-size:14px}.muted{color:#64748b;font-size:13px}.folderbar{display:flex;gap:6px;flex-wrap:wrap;padding:4px 0 8px}
 .folderbar button{white-space:nowrap}.folderbar .active{background:#111827;color:#fff}
 .itemhead{display:flex;align-items:center;gap:8px}.source-dot{width:9px;height:9px;border-radius:50%;display:inline-block;flex:none}
 .source-facebook{background:#1877f2}.source-youtube{background:#ff0000}.source-tiktok{background:#111}.source-other{background:#7c3aed}
@@ -61,9 +61,10 @@ function save(){let u=url.value.trim();if(!/^https?:\/\//i.test(u))return alert(
 function fav(id){let r=a.find(x=>x.id===id);r.favorite=!r.favorite;persist()}
 function del(id){if(confirm("Delete this saved video?")){a=a.filter(x=>x.id!==id);persist()}}
 function moveAuto(id){let r=a.find(x=>x.id===id);if(!r)return;r.folder=autoFolder(r.tags);r.folderLocked=false;persist()}
-function renderFolders(){let names=["All",...folders];folderbar.innerHTML=names.map(f=>'<button type="button" data-folder="'+esc(f)+'">'+(f==="All"?"📚 All":("📁 "+esc(f)))+'</button>').join("");folderbar.querySelectorAll("button").forEach(btn=>{if(btn.dataset.folder===currentFolder)btn.classList.add("active")})}
+const folderBar=document.getElementById("folderbar");
+function renderFolders(){let names=["All",...folders];folderBar.innerHTML=names.map(f=>'<button type="button" data-folder="'+esc(f)+'">'+(f==="All"?"📚 All":("📁 "+esc(f)))+'</button>').join("");folderBar.querySelectorAll("button").forEach(btn=>{if(btn.dataset.folder===currentFolder)btn.classList.add("active")})}
 function selectFolder(f){currentFolder=f;render()}
-if(!folderbar.dataset.bound){folderbar.dataset.bound="1";folderbar.addEventListener("click",e=>{let btn=e.target.closest("button[data-folder]");if(!btn)return;selectFolder(btn.dataset.folder)})}
+if(!folderBar.dataset.bound){folderBar.dataset.bound="1";folderBar.addEventListener("pointerup",e=>{let btn=e.target.closest("button[data-folder]");if(!btn)return;e.preventDefault();selectFolder(btn.dataset.folder)})}
 function render(){let q=search.value.toLowerCase();renderFolders();let b=a.filter(r=>(currentFolder==="All"||r.folder===currentFolder)&&(r.title+" "+r.url+" "+r.notes+" "+r.tags.join(" ")).toLowerCase().includes(q));count.textContent=a.length;favcount.textContent=a.filter(r=>r.favorite).length;if(!b.length){list.innerHTML='<div class="card">Nothing here yet. Share a video to Reel Safe or tap Add.</div>';return}
 let play=currentFolder!=="All"?'<button onclick="playFolder()">▶️ Play Folder</button>':"";
 list.innerHTML=(play?'<div class="card"><div class="row">'+play+'<span class="muted">'+b.length+' videos in this folder</span></div></div>':"")+b.map(r=>{let [src,cls]=sourceOf(r.url),locked=r.folderLocked;return '<div class="card"><div class="itemhead"><span class="source-dot '+cls+'"></span><h3 style="margin:0">'+esc(r.title)+'</h3>'+(r.favorite?'⭐':'')+'</div><div class="muted">'+esc(src)+' · 📁 '+esc(r.folder)+(locked?' · 🔒 manual': ' · 🧠 auto')+'</div><div class="muted">'+esc(r.tags.join(" · "))+'</div><p>'+esc(r.notes)+'</p><div class="row"><button class="primary" onclick=\'window.open('+JSON.stringify(r.url)+'," _blank")\'>▶️ Open</button><button onclick=\'fav("'+r.id+'")\'>'+(r.favorite?'☆ Unfavorite':'⭐ Favorite')+'</button><button onclick=\'openAdd("'+r.id+'")\'>✏️ Edit</button>'+(locked?'<button onclick=\'moveAuto("'+r.id+'")\'>🧠 Auto</button>':"")+'<button onclick=\'del("'+r.id+'")\'>🗑️ Delete</button></div></div>'}).join("")}
@@ -76,6 +77,6 @@ function nextInQueue(){queueIndex++;if(queueIndex>=queue.length)return stopQueue
 function stopQueue(){queue=[];document.getElementById("queue").style.display="none"}
 function backup(){let b=new Blob([JSON.stringify({version:2,reels:a,folders},null,2)],{type:"application/json"}),x=document.createElement("a");x.href=URL.createObjectURL(b);x.download="reel-safe-backup.json";x.click()}
 restore.onchange=e=>{let f=e.target.files[0],r=new FileReader();r.onload=()=>{try{let x=JSON.parse(r.result);let reels=Array.isArray(x)?x:x.reels;if(confirm("Replace your library with this backup?")){a=reels||[];folders=Array.isArray(x.folders)?x.folders:folders;migrate();persist()}}catch{alert("Invalid backup.")}};r.readAsText(f)}
-search.oninput=render;migrate();render();if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
+search.oninput=render;migrate();render();if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js?v=5").catch(()=>{});
 if(params.get("share")==="1"&&sharedReelUrl)setTimeout(()=>{openAdd();url.value=sharedReelUrl;title.value=sharedTitle||"Saved video";notes.value=sharedText&&sharedText!==sharedReelUrl?sharedText:""},300);
 </script></body></html>
