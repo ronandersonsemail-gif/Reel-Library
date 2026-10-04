@@ -11,7 +11,7 @@ input,textarea,select,button{box-sizing:border-box;padding:10px;margin:4px;borde
 input,textarea,select{width:100%}button{cursor:pointer;background:white}.primary{background:#2563eb;color:white;border-color:#2563eb}
 .row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}.row>*{flex:0 1 auto}
 .stat{font-size:14px}.muted{color:#64748b;font-size:13px}.folderbar{display:flex;gap:6px;flex-wrap:wrap;padding:4px 0 8px}
-.folderbar button{white-space:nowrap}.folderbar .active{background:#111827;color:#fff}
+.folderbar button{white-space:nowrap}.folderbar .active{background:#111827;color:#fff}.folder-count{display:inline-block;min-width:20px;padding:2px 6px;margin-left:4px;border-radius:999px;background:#e5e7eb;color:#374151;font-size:12px;font-weight:700}.folderbar .active .folder-count{background:#fff;color:#111827}
 .itemhead{display:flex;align-items:center;gap:8px}.source-dot{width:9px;height:9px;border-radius:50%;display:inline-block;flex:none}
 .source-facebook{background:#1877f2}.source-youtube{background:#ff0000}.source-tiktok{background:#111}.source-other{background:#7c3aed}
 .badge{font-size:12px;background:#eef2ff;padding:4px 7px;border-radius:999px;color:#3730a3}
@@ -62,7 +62,7 @@ function fav(id){let r=a.find(x=>x.id===id);r.favorite=!r.favorite;persist()}
 function del(id){if(confirm("Delete this saved video?")){a=a.filter(x=>x.id!==id);persist()}}
 function moveAuto(id){let r=a.find(x=>x.id===id);if(!r)return;r.folder=autoFolder(r.tags);r.folderLocked=false;persist()}
 const folderBar=document.getElementById("folderbar");
-function renderFolders(){let names=["All",...folders];folderBar.innerHTML=names.map(f=>'<button type="button" data-folder="'+esc(f)+'">'+(f==="All"?"📚 All":("📁 "+esc(f)))+'</button>').join("");folderBar.querySelectorAll("button").forEach(btn=>{if(btn.dataset.folder===currentFolder)btn.classList.add("active")})}
+function renderFolders(){let names=["All",...folders];let counts={All:a.length};folders.forEach(f=>counts[f]=a.filter(r=>r.folder===f).length);folderBar.innerHTML=names.map(f=>'<button type="button" data-folder="'+esc(f)+'">'+(f==="All"?"📚 All":("📁 "+esc(f)))+' <span class="folder-count">'+counts[f]+'</span></button>').join("");folderBar.querySelectorAll("button").forEach(btn=>{if(btn.dataset.folder===currentFolder)btn.classList.add("active")})}
 function selectFolder(f){currentFolder=f;render()}
 if(!folderBar.dataset.bound){folderBar.dataset.bound="1";folderBar.addEventListener("pointerup",e=>{let btn=e.target.closest("button[data-folder]");if(!btn)return;e.preventDefault();selectFolder(btn.dataset.folder)})}
 function render(){let q=search.value.toLowerCase();renderFolders();let b=a.filter(r=>(currentFolder==="All"||r.folder===currentFolder)&&(r.title+" "+r.url+" "+r.notes+" "+r.tags.join(" ")).toLowerCase().includes(q));count.textContent=a.length;favcount.textContent=a.filter(r=>r.favorite).length;if(!b.length){list.innerHTML='<div class="card">Nothing here yet. Share a video to Reel Safe or tap Add.</div>';return}
