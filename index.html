@@ -21,7 +21,7 @@ dialog::backdrop{background:#0008}.dialog-card{margin:0}.danger{color:#b91c1c}
 </style></head>
 <body>
 <header><h1>🔒 Reel Safe</h1><div class="tagline">Save, organize and find your favorite videos.</div>
-<div class="row"><input id="search" placeholder="Search your saved videos..."><button class="primary" onclick="openAdd()">➕ Add</button><button onclick="manageFolders()">📁 Folders</button><button onclick="backup()">⬇️ Backup</button><button onclick="document.getElementById('restore').click()">⬆️ Restore</button><input id="restore" type="file" accept=".json" hidden></div></header>
+<div class="row"><input id="search" placeholder="Search your saved videos..."><button class="primary" onclick="openAdd()">➕ Add</button><button onclick="manageFolders()">📁 Folders</button><button onclick="document.getElementById('messengerImport').click()">📥 Import Messenger</button><input id="messengerImport" type="file" accept=".json,application/json" multiple hidden><button onclick="backup()">⬇️ Backup</button><button onclick="document.getElementById('restore').click()">⬆️ Restore</button><input id="restore" type="file" accept=".json" hidden></div></header>
 <main><div class="card"><div class="stat"><b id="count">0</b> saved · <span id="favcount">0</span> favorites</div><div id="folderbar" class="folderbar"></div></div><div id="list"></div><div id="queue" class="queue"></div></main>
 
 <dialog id="dlg"><div class="card dialog-card"><h2>Add / Edit</h2>
@@ -77,8 +77,46 @@ function playFolder(){let q=a.filter(r=>r.folder===currentFolder);if(!q.length)r
 function showQueue(){let queueEl=document.getElementById("queue");if(!queue.length){queueEl.style.display="none";return}queueEl.style.display="block";let next=queueIndex+1<queue.length?'<button onclick="nextInQueue()">Next ▶️</button>':"";queueEl.innerHTML='<b>▶️ '+esc(currentFolder)+'</b> · Video '+(queueIndex+1)+' of '+queue.length+' '+next+' <button onclick="stopQueue()">Stop</button>'}
 function nextInQueue(){let next=queueIndex+1;if(next>=queue.length)return stopQueue();openQueueVideo(next)}
 function stopQueue(){queue=[];queueIndex=0;document.getElementById("queue").style.display="none"}
+function importMessengerFiles(files){
+ if(!files||!files.length)return;
+ let pending=files.length,added=0,skipped=0,failed=0;
+ const allowed=/https?:\/\/(?:www\.)?(?:facebook\.com|m\.facebook\.com|fb\.watch|youtube\.com|youtu\.be|tiktok\.com)\/[^\s"'<>]*/ig;
+ const existing=new Set(a.map(r=>(r.url||"").replace(/[?#].*$/,"").replace(/\/$/,"").toLowerCase()));
+ for(const file of files){
+  const reader=new FileReader();
+  reader.onload=()=>{
+   try{
+    const data=JSON.parse(reader.result);
+    const messages=Array.isArray(data.messages)?data.messages:[];
+    for(const msg of messages){
+     const parts=[];
+     function walk(v){if(typeof v==="string")parts.push(v);else if(Array.isArray(v))v.forEach(walk);else if(v&&typeof v==="object")Object.values(v).forEach(walk)}
+     walk(msg);
+     const textBlob=parts.join(" ");
+     const found=textBlob.match(allowed)||[];
+     for(let raw of found){
+      const u=raw.replace(/[),.;!?]+$/,"");
+      const key=u.replace(/[?#].*$/,"").replace(/\/$/,"").toLowerCase();
+      if(!key||existing.has(key)){skipped++;continue}
+      existing.add(key);
+      const [src]=sourceOf(u);
+      const tag=src==="Facebook"?["facebook","reel"]:src==="YouTube"?["youtube"]:src==="TikTok"?["tiktok"]:[];
+      const fo=autoFolder(tag);
+      a.unshift({id:crypto.randomUUID(),url:u,title:"Imported video",tags:tag,notes:"Imported from your Facebook Messenger data export",favorite:false,date:new Date().toISOString(),folder:fo,folderLocked:false,source:src});
+      added++;
+     }
+    }
+   }catch{failed++}
+   pending--;
+   if(pending===0){persist();document.getElementById("messengerImport").value="";alert("Messenger import finished. Added "+added+" links. Skipped "+skipped+" duplicates or repeated links. Files that could not be read: "+failed+". Please review the imported items and edit their titles/tags as needed.");}
+  };
+  reader.onerror=()=>{failed++;pending--;if(pending===0){persist();alert("Messenger import finished with some unreadable files. Added "+added+" links.");}};
+  reader.readAsText(file);
+ }
+}
+document.getElementById("messengerImport").addEventListener("change",e=>importMessengerFiles(e.target.files));
 function backup(){let b=new Blob([JSON.stringify({version:2,reels:a,folders},null,2)],{type:"application/json"}),x=document.createElement("a");x.href=URL.createObjectURL(b);x.download="reel-safe-backup.json";x.click()}
 restore.onchange=e=>{let f=e.target.files[0],r=new FileReader();r.onload=()=>{try{let x=JSON.parse(r.result);let reels=Array.isArray(x)?x:x.reels;if(confirm("Replace your library with this backup?")){a=reels||[];folders=Array.isArray(x.folders)?x.folders:folders;migrate();persist()}}catch{alert("Invalid backup.")}};r.readAsText(f)}
-search.oninput=render;migrate();render();if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js?v=6").catch(()=>{});
+search.oninput=render;migrate();render();if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js?v=7").catch(()=>{});
 if(params.get("share")==="1"&&sharedReelUrl)setTimeout(()=>{openAdd();url.value=sharedReelUrl;title.value=sharedTitle||"Saved video";notes.value=sharedText&&sharedText!==sharedReelUrl?sharedText:""},300);
 </script></body></html>
