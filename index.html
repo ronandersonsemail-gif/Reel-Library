@@ -79,6 +79,6 @@ function nextInQueue(){let next=queueIndex+1;if(next>=queue.length)return stopQu
 function stopQueue(){queue=[];queueIndex=0;document.getElementById("queue").style.display="none"}
 function backup(){let b=new Blob([JSON.stringify({version:2,reels:a,folders},null,2)],{type:"application/json"}),x=document.createElement("a");x.href=URL.createObjectURL(b);x.download="reel-safe-backup.json";x.click()}
 restore.onchange=e=>{let f=e.target.files[0],r=new FileReader();r.onload=()=>{try{let x=JSON.parse(r.result);let reels=Array.isArray(x)?x:x.reels;if(confirm("Replace your library with this backup?")){a=reels||[];folders=Array.isArray(x.folders)?x.folders:folders;migrate();persist()}}catch{alert("Invalid backup.")}};r.readAsText(f)}
-search.oninput=render;migrate();render();if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js?v=5").catch(()=>{});
+search.oninput=render;migrate();render();if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js?v=6").catch(()=>{});
 if(params.get("share")==="1"&&sharedReelUrl)setTimeout(()=>{openAdd();url.value=sharedReelUrl;title.value=sharedTitle||"Saved video";notes.value=sharedText&&sharedText!==sharedReelUrl?sharedText:""},300);
 </script></body></html>
